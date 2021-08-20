@@ -1,0 +1,70 @@
+version: "3"
+
+services:
+  appspotify:
+    container_name: app-spotify
+    build:
+      args:
+        user: sammy
+        uid: 1000
+      context: ./
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - ./:/app
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini
+    depends_on:
+      - mysqlapp
+    ports:
+      - 6025:6001
+    env_file:
+      - .env
+    networks:
+      - app-spotify-network
+
+  nginxqback:
+    container_name: nginx-spotify
+    image: 1.21.1-alpine
+    ports:
+      - 835:80
+    volumes:
+      - ./:/app
+      - ./docker/nginx/vhost.conf:/etc/nginx/conf.d/vhost.conf
+    depends_on:
+      - appspotify
+    networks:
+      - app-spotify-network
+
+  mysqlapp:
+    image: mysql:8.0.26
+    command: --max_allowed_packet=325058560
+    container_name: mysql-spotify
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3312:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: your_mysql_root_password
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - dbdataspotify:/var/lib/mysql/
+    networks:
+      - app-spotify-network
+
+  redis:
+    image: redis:6.2.4
+    container_name: redis-spotify
+    ports:
+      - "6383:6379"
+    networks:
+      - app-spotify-network
+
+#Docker Networks
+networks:
+  app-spotify-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdataspotify:
+    driver: local
