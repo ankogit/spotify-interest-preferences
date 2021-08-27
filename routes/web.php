@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SpotifyService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,7 +19,13 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+//    session(['accessTokenSpotify' => $accessToken]);
+
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
+
+Route::get('spotify/analyze', [SpotifyService::class, 'analyzeMyProfile'])->name('spotify.analyze')->middleware(['auth', 'spotify.token']);
+Route::get('find/friends', [\App\Http\Controllers\PagesController::class, 'friends'])->name('find.friends')->middleware(['auth', 'spotify.token']);
+
 
 require __DIR__.'/auth.php';
