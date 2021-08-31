@@ -104,6 +104,7 @@ class User extends Authenticatable
     public static function byOAuthToken(Request $request)
     {
         $userData = Socialite::driver($request->get('provider'))->userFromToken($request->get('token'));
+
         try {
             $user = static::whereHas('socialProviders', function ($query) use ($request, $userData) {
                 $query->where('provider', Str::lower($request->get('provider')))->where('provider_id', $userData->getId());
@@ -142,8 +143,8 @@ class User extends Authenticatable
                 $query->where('provider', Str::lower($provider))->where('provider_id', $userData->getId());
             })->firstOrFail();
         } catch (ModelNotFoundException $e) {
-            $user = static::where('email', $userData->getEmail())->first();
-            if (! $user) {
+//            $user = static::where('email', $userData->getEmail())->first();
+//            if (! $user) {
                 $user = static::create([
                     'name' => $userData->getName(),
                     'email' => $userData->getEmail(),
@@ -151,7 +152,7 @@ class User extends Authenticatable
                     'password' => Hash::make(Str::random(16)),
                     'email_verified_at' => now(),
                 ]);
-            }
+//            }
             SocialProvider::create([
                 'user_id' => $user->id,
                 'provider' => $provider,
